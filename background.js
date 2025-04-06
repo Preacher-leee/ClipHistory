@@ -1,54 +1,55 @@
-// background.js
+let clipboardHistory = [];
 
 // Listen for messages from content.js or popup.js
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  chrome.storage.local.get({ clipboardHistory: [] }, (result) => {
-    const history = result.clipboardHistory;
-    const timestamp = new Date().toISOString();
-
+  if (message.type === 'COPY' || message.type === 'PASTE') {
+    // Handle the copied or pasted content
     const newItem = {
-      type: message.type,
-      content: message.text || message.imageData,
-      timestamp,
-      pinned: false
+      content: message.content,
+      contentType: message.contentType, // 'text' or 'image'
+      timestamp: new Date().toISOString(),
+      action: message.type, // 'copy' or 'paste'
+      pinned: false, // Will implement pinning in the future
     };
 
-    // Avoid duplicate text entries (skip for images)
-    if (
-      newItem.type.startsWith("clipboard_") &&
-      newItem.type !== "clipboard_image" &&
-      history.length &&
-      history[0].content === newItem.content
-    ) {
-      return;
+    clipboardHistory.unshift(newItem); // Add new item to history
+    if (clipboardHistory.length > 20) clipboardHistory.pop(); // Limit history size to 20 items
+
+    // Save clipboard history to localStorage (or chrome.storage for persistence)
+    chrome.storage.local.set({ clipboardHistory: clipboardHistory });
+
+    // Notify popup.js to update the UI
+    chrome.runtime.sendMessage({ type: 'UPDATE_HISTORY', history: clipboardHistory });
+  }
+
+  // Handle requests for the current clipboard history (from popup.js)
+  if (message.type === 'GET_HISTORY') {
+    sendResponse({ history: clipboardHistory });
+  }
+
+  // Handle pinning action (future feature implementation)
+  if (message.type === 'PIN_ITEM') {
+    const { index } = message;
+    if (clipboardHistory[index]) {
+      clipboardHistory[index].pinned = !clipboardHistory[index].pinned;
+      chrome.storage.local.set({ clipboardHistory: clipboardHistory });
+      sendResponse({ history: clipboardHistory });
     }
+  }
 
-    // Add new item at the beginning
-    history.unshift(newItem);
-
-    // Keep pinned + up to 100 most recent unpinned items
-    const pinnedItems = history.filter(item => item.pinned);
-    const unpinnedItems = history.filter(item => !item.pinned).slice(0, 100);
-    const updatedHistory = [...pinnedItems, ...unpinnedItems];
-
-    chrome.storage.local.set({ clipboardHistory: updatedHistory });
-  });
+  // Handle clearing clipboard history (future feature implementation)
+  if (message.type === 'CLEAR_HISTORY') {
+    clipboardHistory = [];
+    chrome.storage.local.set({ clipboardHistory: [] });
+    sendResponse({ history: clipboardHistory });
+  }
 });
 
-// Handle keyboard command (manual clipboard save)
-chrome.commands.onCommand.addListener((command) => {
-  if (command === "save_clipboard") {
-    navigator.clipboard.readText()
-      .then(text => {
-        if (text.trim()) {
-          chrome.runtime.sendMessage({
-            type: "clipboard_text",
-            text
-          });
-        }
-      })
-      .catch(err => {
-        console.error("Clipboard read failed:", err);
-      });
-  }
+// Load clipboard history when extension starts
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.storage.local.get('clipboardHistory', (data) => {
+    if (data.clipboardHistory) {
+      clipboardHistory = data.clipboardHistory;
+    }
+  });
 });
