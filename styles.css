@@ -11,7 +11,8 @@ body {
 .container {
   width: 350px; /* Adjusted width for better viewing */
   padding: 10px;
-  min-height: 400px; /* Ensures that the popup is tall enough */
+  min-height: 400px; /* Ensure popup has enough space */
+  box-sizing: border-box; /* Prevents layout issues */
 }
 
 button {
@@ -29,7 +30,7 @@ input, select {
 
 .history-container {
   margin-top: 20px;
-  max-height: 200px; /* Limit height for the list */
+  max-height: 300px; /* Limit height for the list */
   overflow-y: auto;  /* Scrollable history */
 }
 
