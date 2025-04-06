@@ -1,46 +1,83 @@
-// content.js
+// Listen for 'copy' event to capture copied content (text or image)
+document.addEventListener('copy', function (event) {
+  setTimeout(() => {
+    // Check for text content in the clipboard
+    navigator.clipboard.readText().then(text => {
+      if (text) {
+        // If text content is copied, send it to the background script
+        chrome.runtime.sendMessage({
+          type: 'COPY',
+          content: text,
+          contentType: 'text' // Mark content type as text
+        });
+      }
+    }).catch(err => {
+      console.error('Clipboard read failed during copy (text)', err);
+    });
 
-// Send clipboard text (for copy or paste)
-function sendClipboardText(text, type = 'clipboard_text') {
-  if (!text || !text.trim()) return;
-  chrome.runtime.sendMessage({ type, text });
-}
-
-// Send clipboard image as Base64 (data URL)
-async function sendClipboardImage() {
-  try {
-    const items = await navigator.clipboard.read();
-    for (const item of items) {
-      for (const type of item.types) {
-        if (type.startsWith('image/')) {
-          const blob = await item.getType(type);
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            chrome.runtime.sendMessage({
-              type: 'clipboard_image',
-              imageData: reader.result
-            });
-          };
-          reader.readAsDataURL(blob);
+    // Check for image content in the clipboard
+    navigator.clipboard.read().then(items => {
+      for (const item of items) {
+        if (item.types.includes('image/png')) { // Adjust this for other image types if needed
+          item.getType('image/png').then(blob => {
+            const reader = new FileReader();
+            reader.onload = function () {
+              const imageData = reader.result;
+              // Send image data to the background script
+              chrome.runtime.sendMessage({
+                type: 'COPY',
+                content: imageData,
+                contentType: 'image' // Mark content type as image
+              });
+            };
+            reader.readAsDataURL(blob);
+          });
         }
       }
-    }
-  } catch (err) {
-    // navigator.clipboard.read() requires user gesture and permissions
-    // Fail silently or log if debugging
-    // console.warn('Clipboard image read failed', err);
-  }
-}
-
-// Handle text copy (Ctrl+C, right-click Copy)
-document.addEventListener('copy', () => {
-  const selectedText = window.getSelection()?.toString() || '';
-  sendClipboardText(selectedText, 'clipboard_text');
-  sendClipboardImage(); // Attempt to capture image (if any)
+    }).catch(err => {
+      console.error('Clipboard read failed during copy (image)', err);
+    });
+  }, 100);
 });
 
-// Handle text paste (Ctrl+V, right-click Paste)
-document.addEventListener('paste', (e) => {
-  const pastedText = (e.clipboardData || window.clipboardData)?.getData('text') || '';
-  sendClipboardText(pastedText, 'clipboard_paste');
+// Listen for 'paste' event to capture pasted content (text or image)
+document.addEventListener('paste', function (event) {
+  setTimeout(() => {
+    // Check for text content in the clipboard
+    navigator.clipboard.readText().then(text => {
+      if (text) {
+        // If text content is pasted, send it to the background script
+        chrome.runtime.sendMessage({
+          type: 'PASTE',
+          content: text,
+          contentType: 'text' // Mark content type as text
+        });
+      }
+    }).catch(err => {
+      console.error('Clipboard read failed during paste (text)', err);
+    });
+
+    // Check for image content in the clipboard
+    navigator.clipboard.read().then(items => {
+      for (const item of items) {
+        if (item.types.includes('image/png')) { // Adjust this for other image types if needed
+          item.getType('image/png').then(blob => {
+            const reader = new FileReader();
+            reader.onload = function () {
+              const imageData = reader.result;
+              // Send image data to the background script
+              chrome.runtime.sendMessage({
+                type: 'PASTE',
+                content: imageData,
+                contentType: 'image' // Mark content type as image
+              });
+            };
+            reader.readAsDataURL(blob);
+          });
+        }
+      }
+    }).catch(err => {
+      console.error('Clipboard read failed during paste (image)', err);
+    });
+  }, 100);
 });
