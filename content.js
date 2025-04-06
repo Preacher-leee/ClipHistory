@@ -1,41 +1,43 @@
 // content.js
 
-// Function to handle clipboard data (both text and images)
-function handleClipboardData(event) {
-  // Check if the clipboard event contains data
-  if (event.clipboardData && event.clipboardData.items) {
-    for (let i = 0; i < event.clipboardData.items.length; i++) {
-      const item = event.clipboardData.items[i];
+function sendClipboardText(text, type = 'clipboard_text') {
+  if (!text.trim()) return;
+  chrome.runtime.sendMessage({ type, text });
+}
 
-      // If the item is text
-      if (item.type.indexOf('text') === 0) {
-        const clipboardText = event.clipboardData.getData('text');
-        if (clipboardText) {
-          // Send the clipboard text to background.js for saving
-          chrome.runtime.sendMessage({
-            type: 'save_clipboard',
-            text: clipboardText
-          });
-        }
-      }
-      
-      // If the item is an image
-      if (item.type.indexOf('image') === 0) {
-        const clipboardImage = item.getAsFile();
-        if (clipboardImage) {
+async function sendClipboardImage() {
+  try {
+    const items = await navigator.clipboard.read();
+    for (const item of items) {
+      for (const type of item.types) {
+        if (type.startsWith('image/')) {
+          const blob = await item.getType(type);
           const reader = new FileReader();
-
-          reader.onloadend = function () {
-            const base64Image = reader.result;
-            // Send the base64 image to background.js for saving
+          reader.onloadend = () => {
             chrome.runtime.sendMessage({
-              type: 'save_clipboard',
-              text: base64Image,
-              isImage: true
+              type: 'clipboard_image',
+              imageData: reader.result
             });
           };
-
-          // Read the image as base64
-          reader.readAsDataURL(clipboardImage);
+          reader.readAsDataURL(blob);
         }
       }
+    }
+  } catch (err) {
+    // Clipboard read requires user gesture and permission
+  }
+}
+
+// Capture Ctrl+C or right-click > Copy
+document.addEventListener('copy', () => {
+  const selected = window.getSelection()?.toString() || '';
+  sendClipboardText(selected);
+  sendClipboardImage(); // optional: may not work without user gesture
+});
+
+// Capture Ctrl+V or right-click > Paste
+document.addEventListener('paste', (e) => {
+  const pastedText = (e.clipboardData || window.clipboardData)?.getData('text') || '';
+  sendClipboardText(pastedText, 'clipboard_paste');
+  // Do not read clipboard image here; navigator.clipboard.read() not allowed
+});
