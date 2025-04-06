@@ -9,8 +9,9 @@ body {
 }
 
 .container {
-  width: 300px;
+  width: 350px; /* Adjusted width for better viewing */
   padding: 10px;
+  min-height: 400px; /* Ensures that the popup is tall enough */
 }
 
 button {
@@ -28,6 +29,8 @@ input, select {
 
 .history-container {
   margin-top: 20px;
+  max-height: 200px; /* Limit height for the list */
+  overflow-y: auto;  /* Scrollable history */
 }
 
 ul {
@@ -93,151 +96,6 @@ li.selected {
   margin-bottom: 20px;
 }
 
-/* Dark Mode Styling */
-body.dark-mode {
-  background-color: #333;
-  color: #fff;
-}
-
-body.dark-mode .options-container {
-  background-color: #444;
-  border-radius: 8px;
-  padding: 20px;
-}
-
-body.dark-mode h1 {
-  color: #fff;
-}
-
-body.dark-mode .setting {
-  color: #ddd;
-}
-
-body.dark-mode button {
-  background-color: #1a73e8;
-}
-
-body.dark-mode button:hover {
-  background-color: #0b5f8f;
-  transform: translateY(-2px);
-}
-
-/* Scroll-to-top Button */
-#scrollToTop {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background-color: #007bff;
-  color: white;
-  padding: 10px 15px;
-  border-radius: 50%;
-  font-size: 1.5em;
-  cursor: pointer;
-  display: none;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: background-color 0.2s, transform 0.2s;
-}
-
-#scrollToTop:hover {
-  background-color: #0056b3;
-  transform: translateY(-2px);
-}
-
-#scrollToTop:focus {
-  outline: none;
-}
-
-/* Styling for clipboard history container */
-.history-container {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-/* Styling for individual clipboard history item */
-.history-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  background-color: #f7f7f7;
-  border-radius: 5px;
-  transition: background-color 0.3s;
-}
-
-.history-item:hover {
-  background-color: #f1f1f1;
-}
-
-.history-item img {
-  max-width: 50px;
-  max-height: 50px;
-  object-fit: cover;
-  border-radius: 5px;
-}
-
-.history-item p {
-  flex-grow: 1;
+.dark-mode-toggle input {
   margin-left: 10px;
-  word-wrap: break-word;
-  font-size: 1.1em;
-  color: #333;
-}
-
-.history-item button {
-  background-color: transparent;
-  color: #007bff;
-  border: none;
-  font-size: 1em;
-  cursor: pointer;
-}
-
-.history-item button:hover {
-  text-decoration: underline;
-}
-
-.history-item button:focus {
-  outline: none;
-}
-
-/* Styling for search bar */
-#searchBar {
-  width: 100%;
-  padding: 10px;
-  font-size: 1.1em;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  margin-bottom: 15px;
-  background-color: #fff;
-}
-
-#searchBar:focus {
-  outline: none;
-  border-color: #007bff;
-}
-
-/* Pinning Icon */
-.pin-icon {
-  font-size: 1.5em;
-  color: #007bff;
-  cursor: pointer;
-}
-
-.pin-icon.pinned {
-  color: #ff6f00;
-}
-
-/* Additional body styling for dark mode */
-body.dark-mode .history-item {
-  background-color: #555;
-}
-
-body.dark-mode .history-item:hover {
-  background-color: #666;
-}
-
-body.dark-mode .history-item p {
-  color: #ddd;
 }
