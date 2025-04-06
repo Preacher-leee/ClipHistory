@@ -1,121 +1,71 @@
-// Define elements
-const historyContainer = document.getElementById('historyContainer');
-const clearButton = document.getElementById('clearHistory');
-const searchInput = document.getElementById('searchInput');
-const darkModeToggle = document.getElementById('darkModeToggle');
+document.addEventListener('DOMContentLoaded', () => {
+  // Get elements
+  const historyContainer = document.getElementById('historyContainer');
+  const clearHistoryButton = document.getElementById('clearHistory');
+  const searchInput = document.getElementById('searchInput');
 
-// Store dark mode state
-let darkMode = false;
+  // Get view mode from localStorage and set the layout
+  const viewMode = localStorage.getItem('viewMode') || 'list'; // Default to list if not set
 
-// Function to create a list item for clipboard history
-function createHistoryItem(item, index) {
-  const historyItem = document.createElement('div');
-  historyItem.classList.add('history-item');
-  
-  // Add a 'pinned' class if the item is pinned
-  if (item.pinned) {
-    historyItem.classList.add('pinned');
+  // Apply the view mode setting to the history container
+  if (viewMode === 'grid') {
+    historyContainer.classList.add('grid-view');
+    historyContainer.classList.remove('list-view');
+  } else {
+    historyContainer.classList.add('list-view');
+    historyContainer.classList.remove('grid-view');
   }
 
-  const contentDiv = document.createElement('div');
-  contentDiv.classList.add('content');
+  // Function to render clipboard history
+  const renderHistory = (historyItems) => {
+    historyContainer.innerHTML = ''; // Clear current items
+    
+    historyItems.forEach(item => {
+      const historyItem = document.createElement('div');
+      historyItem.classList.add('history-item');
+      
+      if (item.type === 'image') {
+        // If it's an image, create an image element
+        const imageElement = document.createElement('img');
+        imageElement.src = item.content;
+        imageElement.alt = 'Clipboard Image';
+        historyItem.appendChild(imageElement);
+      } else {
+        // If it's text, display it as text
+        const textElement = document.createElement('div');
+        textElement.classList.add('text-content');
+        textElement.textContent = item.content;
+        historyItem.appendChild(textElement);
+      }
+      
+      // Optional: Add ability to delete or pin items in history
+      historyItem.addEventListener('click', () => {
+        navigator.clipboard.writeText(item.content); // Automatically copy the content when clicked
+      });
 
-  // Display text or image content
-  if (item.contentType === 'text') {
-    const textContent = document.createElement('div');
-    textContent.classList.add('text-content');
-    textContent.textContent = item.content;
-    contentDiv.appendChild(textContent);
-  } else if (item.contentType === 'image') {
-    const imageContent = document.createElement('img');
-    imageContent.classList.add('image-content');
-    imageContent.src = item.content;
-    contentDiv.appendChild(imageContent);
-  }
-
-  // Add a button to toggle pinning
-  const pinButton = document.createElement('button');
-  pinButton.classList.add('pin-button');
-  pinButton.textContent = item.pinned ? 'Unpin' : 'Pin';
-  pinButton.addEventListener('click', () => togglePin(index));
-
-  // Add a delete button
-  const deleteButton = document.createElement('button');
-  deleteButton.classList.add('delete-button');
-  deleteButton.textContent = 'Delete';
-  deleteButton.addEventListener('click', () => deleteItem(index));
-
-  // Append elements
-  historyItem.appendChild(contentDiv);
-  historyItem.appendChild(pinButton);
-  historyItem.appendChild(deleteButton);
-
-  return historyItem;
-}
-
-// Function to display clipboard history
-function displayHistory(history) {
-  historyContainer.innerHTML = ''; // Clear the current history
-  history.forEach((item, index) => {
-    const historyItem = createHistoryItem(item, index);
-    historyContainer.appendChild(historyItem);
-  });
-}
-
-// Function to load clipboard history from background.js
-function loadHistory() {
-  chrome.runtime.sendMessage({ type: 'GET_HISTORY' }, (response) => {
-    const history = response.history || [];
-    displayHistory(history);
-  });
-}
-
-// Function to clear the clipboard history
-clearButton.addEventListener('click', () => {
-  chrome.runtime.sendMessage({ type: 'CLEAR_HISTORY' }, (response) => {
-    displayHistory(response.history);
-  });
-});
-
-// Function to toggle pinning/unpinning
-function togglePin(index) {
-  chrome.runtime.sendMessage({ type: 'PIN_ITEM', index: index }, (response) => {
-    displayHistory(response.history);
-  });
-}
-
-// Function to delete an item from clipboard history
-function deleteItem(index) {
-  const history = JSON.parse(localStorage.getItem('clipboardHistory')) || [];
-  history.splice(index, 1);
-  localStorage.setItem('clipboardHistory', JSON.stringify(history));
-  displayHistory(history);
-}
-
-// Event listener for searching/filtering clipboard history
-searchInput.addEventListener('input', () => {
-  const query = searchInput.value.toLowerCase();
-  chrome.runtime.sendMessage({ type: 'GET_HISTORY' }, (response) => {
-    const filteredHistory = response.history.filter(item => {
-      const content = item.content.toLowerCase();
-      return content.includes(query);
+      historyContainer.appendChild(historyItem);
     });
-    displayHistory(filteredHistory);
+  };
+
+  // Function to filter clipboard history based on search
+  searchInput.addEventListener('input', (event) => {
+    const query = event.target.value.toLowerCase();
+    const filteredHistory = clipboardHistory.filter(item =>
+      item.content.toLowerCase().includes(query) || item.type.includes(query)
+    );
+    renderHistory(filteredHistory);
+  });
+
+  // Load clipboard history from storage and render it
+  chrome.storage.local.get(['clipboardHistory'], (result) => {
+    const historyItems = result.clipboardHistory || [];
+    renderHistory(historyItems);
+  });
+
+  // Clear clipboard history functionality
+  clearHistoryButton.addEventListener('click', () => {
+    chrome.storage.local.set({ clipboardHistory: [] }, () => {
+      renderHistory([]); // Clear the displayed history as well
+    });
   });
 });
-
-// Toggle dark mode
-darkModeToggle.addEventListener('click', () => {
-  darkMode = !darkMode;
-  document.body.classList.toggle('dark-mode', darkMode);
-  localStorage.setItem('darkMode', darkMode); // Store dark mode preference
-});
-
-// Check if dark mode preference is stored
-if (localStorage.getItem('darkMode') === 'true') {
-  document.body.classList.add('dark-mode');
-  darkMode = true;
-}
-
-// Initialize the extension by loading the clipboard history
-loadHistory();
