@@ -1,28 +1,51 @@
-<!-- popup.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clipboard History</title>
+  <title>Clipboard History Manager</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="header">
-    <h1>📋 Clipboard</h1>
-    <button id="clearHistory" title="Clear all">🗑️</button>
+  <div class="container">
+    <!-- Dark Mode Toggle -->
+    <div class="dark-mode-toggle">
+      <label for="dark-mode-checkbox">Dark Mode</label>
+      <input type="checkbox" id="dark-mode-checkbox">
+    </div>
+
+    <!-- Search Filter -->
+    <div class="search-filters">
+      <label for="search-input">Search:</label>
+      <input type="text" id="search-input" placeholder="Search clipboard history...">
+      
+      <label for="type-filter">Type:</label>
+      <select id="type-filter">
+        <option value="all">All</option>
+        <option value="text">Text</option>
+        <option value="image">Image</option>
+      </select>
+
+      <label for="date-from">From:</label>
+      <input type="date" id="date-from">
+      
+      <label for="date-to">To:</label>
+      <input type="date" id="date-to">
+    </div>
+
+    <!-- Clipboard History List -->
+    <div class="history-container">
+      <ul id="clipboard-history">
+        <!-- History items will be dynamically inserted here -->
+      </ul>
+    </div>
+
+    <!-- Multi-Select Actions -->
+    <div class="multi-select-actions">
+      <button id="delete-selected" disabled>Delete</button>
+      <button id="pin-selected" disabled>Pin</button>
+    </div>
   </div>
-
-  <!-- Search Bar -->
-  <input type="text" id="searchInput" placeholder="Search clipboard..." title="Search History" />
-
-  <!-- Clipboard History Container -->
-  <div id="history" class="history-container">
-    <!-- Clipboard history entries will be injected here dynamically -->
-  </div>
-
-  <!-- Scroll to Top Button -->
-  <button id="scrollTopBtn" title="Back to Top">⬆️</button>
 
   <script src="popup.js"></script>
 </body>
