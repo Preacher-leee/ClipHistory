@@ -1,33 +1,31 @@
-<!-- options.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clipboard History - Options</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>Clipboard History - Settings</title>
+  <link rel="stylesheet" href="options.css">
 </head>
 <body>
-  <div class="options-container">
-    <h1>Clipboard History - Options</h1>
+  <div class="container">
+    <h1>Clipboard History - Settings</h1>
 
-    <div class="setting">
-      <label for="pinningToggle">Enable Pinning:</label>
-      <input type="checkbox" id="pinningToggle" title="Enable/Disable pinning of clipboard items" />
+    <!-- Dark Mode Toggle -->
+    <div class="option">
+      <label for="darkModeToggle">Dark Mode</label>
+      <input type="checkbox" id="darkModeToggle">
     </div>
 
-    <div class="setting">
-      <label for="darkModeToggle">Enable Dark Mode:</label>
-      <input type="checkbox" id="darkModeToggle" title="Enable/Disable dark mode for the popup" />
+    <!-- List View / Grid View Toggle -->
+    <div class="option">
+      <label for="viewMode">Display Mode</label>
+      <select id="viewMode">
+        <option value="list">List View</option>
+        <option value="grid">Grid View</option>
+      </select>
     </div>
 
-    <div class="setting">
-      <button id="clearHistoryButton" title="Clear all clipboard history">Clear History</button>
-    </div>
-
-    <div class="setting">
-      <button id="resetDefaultsButton" title="Reset all settings to default">Reset to Default</button>
-    </div>
+    <button id="saveSettings">Save Settings</button>
   </div>
 
   <script src="options.js"></script>
