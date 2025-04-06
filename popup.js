@@ -1,142 +1,121 @@
-// popup.js
+// Define elements
+const historyContainer = document.getElementById('historyContainer');
+const clearButton = document.getElementById('clearHistory');
+const searchInput = document.getElementById('searchInput');
+const darkModeToggle = document.getElementById('darkModeToggle');
 
-// DOM elements
-const darkModeCheckbox = document.getElementById('dark-mode-checkbox');
-const searchInput = document.getElementById('search-input');
-const typeFilter = document.getElementById('type-filter');
-const dateFrom = document.getElementById('date-from');
-const dateTo = document.getElementById('date-to');
-const clipboardHistoryList = document.getElementById('clipboard-history');
-const deleteSelectedButton = document.getElementById('delete-selected');
-const pinSelectedButton = document.getElementById('pin-selected');
+// Store dark mode state
+let darkMode = false;
 
-// Local storage keys
-const DARK_MODE_KEY = 'darkModeEnabled';
-const CLIPBOARD_HISTORY_KEY = 'clipboardHistory';
-
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-  // Check dark mode preference
-  const isDarkMode = localStorage.getItem(DARK_MODE_KEY) === 'true';
-  if (isDarkMode) {
-    document.body.classList.add('dark-mode');
-    darkModeCheckbox.checked = true;
+// Function to create a list item for clipboard history
+function createHistoryItem(item, index) {
+  const historyItem = document.createElement('div');
+  historyItem.classList.add('history-item');
+  
+  // Add a 'pinned' class if the item is pinned
+  if (item.pinned) {
+    historyItem.classList.add('pinned');
   }
 
-  // Load clipboard history
-  loadClipboardHistory();
+  const contentDiv = document.createElement('div');
+  contentDiv.classList.add('content');
 
-  // Event listeners
-  darkModeCheckbox.addEventListener('change', toggleDarkMode);
-  searchInput.addEventListener('input', filterHistory);
-  typeFilter.addEventListener('change', filterHistory);
-  dateFrom.addEventListener('input', filterHistory);
-  dateTo.addEventListener('input', filterHistory);
-  deleteSelectedButton.addEventListener('click', deleteSelectedItems);
-  pinSelectedButton.addEventListener('click', pinSelectedItems);
+  // Display text or image content
+  if (item.contentType === 'text') {
+    const textContent = document.createElement('div');
+    textContent.classList.add('text-content');
+    textContent.textContent = item.content;
+    contentDiv.appendChild(textContent);
+  } else if (item.contentType === 'image') {
+    const imageContent = document.createElement('img');
+    imageContent.classList.add('image-content');
+    imageContent.src = item.content;
+    contentDiv.appendChild(imageContent);
+  }
+
+  // Add a button to toggle pinning
+  const pinButton = document.createElement('button');
+  pinButton.classList.add('pin-button');
+  pinButton.textContent = item.pinned ? 'Unpin' : 'Pin';
+  pinButton.addEventListener('click', () => togglePin(index));
+
+  // Add a delete button
+  const deleteButton = document.createElement('button');
+  deleteButton.classList.add('delete-button');
+  deleteButton.textContent = 'Delete';
+  deleteButton.addEventListener('click', () => deleteItem(index));
+
+  // Append elements
+  historyItem.appendChild(contentDiv);
+  historyItem.appendChild(pinButton);
+  historyItem.appendChild(deleteButton);
+
+  return historyItem;
+}
+
+// Function to display clipboard history
+function displayHistory(history) {
+  historyContainer.innerHTML = ''; // Clear the current history
+  history.forEach((item, index) => {
+    const historyItem = createHistoryItem(item, index);
+    historyContainer.appendChild(historyItem);
+  });
+}
+
+// Function to load clipboard history from background.js
+function loadHistory() {
+  chrome.runtime.sendMessage({ type: 'GET_HISTORY' }, (response) => {
+    const history = response.history || [];
+    displayHistory(history);
+  });
+}
+
+// Function to clear the clipboard history
+clearButton.addEventListener('click', () => {
+  chrome.runtime.sendMessage({ type: 'CLEAR_HISTORY' }, (response) => {
+    displayHistory(response.history);
+  });
 });
 
-// Toggle Dark Mode
-function toggleDarkMode() {
-  const isDarkMode = darkModeCheckbox.checked;
-  if (isDarkMode) {
-    document.body.classList.add('dark-mode');
-  } else {
-    document.body.classList.remove('dark-mode');
-  }
-  localStorage.setItem(DARK_MODE_KEY, isDarkMode.toString());
-}
-
-// Load clipboard history from local storage
-function loadClipboardHistory() {
-  chrome.storage.local.get([CLIPBOARD_HISTORY_KEY], (result) => {
-    const history = result[CLIPBOARD_HISTORY_KEY] || [];
-    displayHistory(history);
+// Function to toggle pinning/unpinning
+function togglePin(index) {
+  chrome.runtime.sendMessage({ type: 'PIN_ITEM', index: index }, (response) => {
+    displayHistory(response.history);
   });
 }
 
-// Display history items in the UI
-function displayHistory(history) {
-  clipboardHistoryList.innerHTML = '';
-  history.forEach((item, index) => {
-    const listItem = document.createElement('li');
-    listItem.classList.add(item.pinned ? 'pinned' : '');
-    listItem.dataset.index = index;
-
-    const content = document.createElement('div');
-    content.textContent = item.content.slice(0, 50) + '...'; // Show truncated content
-
-    listItem.appendChild(content);
-    clipboardHistoryList.appendChild(listItem);
-  });
+// Function to delete an item from clipboard history
+function deleteItem(index) {
+  const history = JSON.parse(localStorage.getItem('clipboardHistory')) || [];
+  history.splice(index, 1);
+  localStorage.setItem('clipboardHistory', JSON.stringify(history));
+  displayHistory(history);
 }
 
-// Filter clipboard history based on search criteria
-function filterHistory() {
-  const searchText = searchInput.value.toLowerCase();
-  const filterType = typeFilter.value;
-  const fromDate = dateFrom.value ? new Date(dateFrom.value) : null;
-  const toDate = dateTo.value ? new Date(dateTo.value) : null;
-
-  chrome.storage.local.get([CLIPBOARD_HISTORY_KEY], (result) => {
-    let history = result[CLIPBOARD_HISTORY_KEY] || [];
-
-    // Filter by text search
-    if (searchText) {
-      history = history.filter(item => item.content.toLowerCase().includes(searchText));
-    }
-
-    // Filter by type (text/image)
-    if (filterType && filterType !== 'all') {
-      history = history.filter(item => item.type === `clipboard_${filterType}`);
-    }
-
-    // Filter by date range
-    if (fromDate) {
-      history = history.filter(item => new Date(item.timestamp) >= fromDate);
-    }
-    if (toDate) {
-      history = history.filter(item => new Date(item.timestamp) <= toDate);
-    }
-
-    displayHistory(history);
-  });
-}
-
-// Multi-select actions
-function toggleSelected(item) {
-  item.classList.toggle('selected');
-  const selectedItems = document.querySelectorAll('.selected');
-  deleteSelectedButton.disabled = selectedItems.length === 0;
-  pinSelectedButton.disabled = selectedItems.length === 0;
-}
-
-// Handle deleting selected items
-function deleteSelectedItems() {
-  const selectedItems = document.querySelectorAll('.selected');
-  const indicesToDelete = Array.from(selectedItems).map(item => item.dataset.index);
-  
-  chrome.storage.local.get([CLIPBOARD_HISTORY_KEY], (result) => {
-    let history = result[CLIPBOARD_HISTORY_KEY] || [];
-    history = history.filter((_, index) => !indicesToDelete.includes(index.toString()));
-    chrome.storage.local.set({ [CLIPBOARD_HISTORY_KEY]: history });
-    loadClipboardHistory(); // Reload after delete
-  });
-}
-
-// Handle pinning selected items
-function pinSelectedItems() {
-  const selectedItems = document.querySelectorAll('.selected');
-  const indicesToPin = Array.from(selectedItems).map(item => item.dataset.index);
-  
-  chrome.storage.local.get([CLIPBOARD_HISTORY_KEY], (result) => {
-    let history = result[CLIPBOARD_HISTORY_KEY] || [];
-    history.forEach((item, index) => {
-      if (indicesToPin.includes(index.toString())) {
-        item.pinned = true;
-      }
+// Event listener for searching/filtering clipboard history
+searchInput.addEventListener('input', () => {
+  const query = searchInput.value.toLowerCase();
+  chrome.runtime.sendMessage({ type: 'GET_HISTORY' }, (response) => {
+    const filteredHistory = response.history.filter(item => {
+      const content = item.content.toLowerCase();
+      return content.includes(query);
     });
-    chrome.storage.local.set({ [CLIPBOARD_HISTORY_KEY]: history });
-    loadClipboardHistory(); // Reload after pinning
+    displayHistory(filteredHistory);
   });
+});
+
+// Toggle dark mode
+darkModeToggle.addEventListener('click', () => {
+  darkMode = !darkMode;
+  document.body.classList.toggle('dark-mode', darkMode);
+  localStorage.setItem('darkMode', darkMode); // Store dark mode preference
+});
+
+// Check if dark mode preference is stored
+if (localStorage.getItem('darkMode') === 'true') {
+  document.body.classList.add('dark-mode');
+  darkMode = true;
 }
+
+// Initialize the extension by loading the clipboard history
+loadHistory();
