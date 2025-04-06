@@ -1,52 +1,60 @@
-// options.js
-
 document.addEventListener('DOMContentLoaded', () => {
-  // Get elements from the options page
-  const pinningToggle = document.getElementById('pinningToggle');
-  const darkModeToggle = document.getElementById('darkModeToggle');
-  const clearHistoryButton = document.getElementById('clearHistoryButton');
-  const resetDefaultsButton = document.getElementById('resetDefaultsButton');
+  // Load and apply user settings when the page is loaded
+  loadSettings();
 
-  // Load settings from chrome.storage.local
-  chrome.storage.local.get(['pinningEnabled', 'darkModeEnabled'], (result) => {
-    pinningToggle.checked = result.pinningEnabled !== undefined ? result.pinningEnabled : true; // default to true
-    darkModeToggle.checked = result.darkModeEnabled || false; // default to false (light mode)
-  });
+  // Event listener for Dark Mode toggle
+  document.getElementById('darkModeToggle').addEventListener('change', toggleDarkMode);
 
-  // Listen for pinning toggle change
-  pinningToggle.addEventListener('change', () => {
-    const pinningEnabled = pinningToggle.checked;
-    chrome.storage.local.set({ pinningEnabled });
-  });
+  // Event listener for View Mode select
+  document.getElementById('viewModeSelect').addEventListener('change', saveViewMode);
 
-  // Listen for dark mode toggle change
-  darkModeToggle.addEventListener('change', () => {
-    const darkModeEnabled = darkModeToggle.checked;
-    chrome.storage.local.set({ darkModeEnabled });
-    // Toggle dark mode immediately on change
-    document.body.classList.toggle('dark-mode', darkModeEnabled);
-  });
-
-  // Handle clear history button click
-  clearHistoryButton.addEventListener('click', () => {
-    // Clear history from chrome storage
-    chrome.storage.local.remove('clipboardHistory', () => {
-      alert('Clipboard history has been cleared.');
-    });
-  });
-
-  // Handle reset to default settings button click
-  resetDefaultsButton.addEventListener('click', () => {
-    // Reset settings to default values
-    chrome.storage.local.set({
-      pinningEnabled: true,
-      darkModeEnabled: false,
-    }, () => {
-      // Reset UI based on default values
-      pinningToggle.checked = true;
-      darkModeToggle.checked = false;
-      document.body.classList.remove('dark-mode');
-      alert('Settings have been reset to default.');
-    });
-  });
+  // Event listener for Clear History Button
+  document.getElementById('clearHistoryButton').addEventListener('click', clearHistory);
 });
+
+// Load settings from chrome storage
+function loadSettings() {
+  chrome.storage.local.get(['darkMode', 'viewMode'], (result) => {
+    // Apply dark mode if enabled
+    if (result.darkMode === true) {
+      document.body.classList.add('dark-mode');
+      document.getElementById('darkModeToggle').checked = true;
+    }
+
+    // Apply selected view mode
+    if (result.viewMode === 'grid') {
+      document.getElementById('viewModeSelect').value = 'grid';
+    } else {
+      document.getElementById('viewModeSelect').value = 'list';
+    }
+  });
+}
+
+// Toggle Dark Mode
+function toggleDarkMode() {
+  const darkModeEnabled = document.getElementById('darkModeToggle').checked;
+  if (darkModeEnabled) {
+    document.body.classList.add('dark-mode');
+  } else {
+    document.body.classList.remove('dark-mode');
+  }
+
+  // Save dark mode setting to storage
+  chrome.storage.local.set({ darkMode: darkModeEnabled });
+}
+
+// Save selected view mode
+function saveViewMode() {
+  const viewMode = document.getElementById('viewModeSelect').value;
+  chrome.storage.local.set({ viewMode: viewMode });
+}
+
+// Clear Clipboard History
+function clearHistory() {
+  chrome.storage.local.set({ clipboardHistory: [] }, () => {
+    document.getElementById('message').classList.remove('hidden');
+    setTimeout(() => {
+      document.getElementById('message').classList.add('hidden');
+    }, 2000);
+  });
+}
