@@ -1,65 +1,54 @@
 // background.js
 
-// Helper to get existing clipboard history
-function getClipboardHistory(callback) {
-  chrome.storage.local.get(['clipboardHistory'], (result) => {
-    const history = result.clipboardHistory || [];
-    callback(history);
-  });
-}
+// Listen for messages from content.js or popup.js
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  chrome.storage.local.get({ clipboardHistory: [] }, (result) => {
+    const history = result.clipboardHistory;
+    const timestamp = new Date().toISOString();
 
-// Save clipboard text to local storage
-function saveClipboardText(text) {
-  if (!text || !text.trim()) return;
+    const newItem = {
+      type: message.type,
+      content: message.text || message.imageData,
+      timestamp,
+      pinned: false
+    };
 
-  getClipboardHistory((history) => {
-    const exists = history.find(item => item.text === text);
-    if (exists) return;
-
-    const newEntry = { text, pinned: false };
-    history.unshift(newEntry);
-    // Limit history to 100 entries
-    if (history.length > 100) {
-      history = history.slice(0, 100);
+    // Avoid duplicate text entries (skip for images)
+    if (
+      newItem.type.startsWith("clipboard_") &&
+      newItem.type !== "clipboard_image" &&
+      history.length &&
+      history[0].content === newItem.content
+    ) {
+      return;
     }
 
-    chrome.storage.local.set({ clipboardHistory: history });
+    // Add new item at the beginning
+    history.unshift(newItem);
+
+    // Keep pinned + up to 100 most recent unpinned items
+    const pinnedItems = history.filter(item => item.pinned);
+    const unpinnedItems = history.filter(item => !item.pinned).slice(0, 100);
+    const updatedHistory = [...pinnedItems, ...unpinnedItems];
+
+    chrome.storage.local.set({ clipboardHistory: updatedHistory });
   });
-}
+});
 
-// Listen for messages from popup or content scripts
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'save_clipboard') {
-    saveClipboardText(message.text);
-    sendResponse({ status: 'saved' });
-  }
-
-  if (message.type === 'get_history') {
-    getClipboardHistory((history) => {
-      sendResponse({ history });
-    });
-    return true; // Needed to use async sendResponse
-  }
-
-  if (message.type === 'clear_history') {
-    chrome.storage.local.set({ clipboardHistory: [] }, () => {
-      sendResponse({ status: 'cleared' });
-    });
-    return true;
-  }
-
-  if (message.type === 'toggle_pin') {
-    getClipboardHistory((history) => {
-      const index = history.findIndex(item => item.text === message.text);
-      if (index !== -1) {
-        history[index].pinned = !history[index].pinned;
-        chrome.storage.local.set({ clipboardHistory: history }, () => {
-          sendResponse({ status: 'toggled' });
-        });
-      } else {
-        sendResponse({ status: 'not_found' });
-      }
-    });
-    return true;
+// Handle keyboard command (manual clipboard save)
+chrome.commands.onCommand.addListener((command) => {
+  if (command === "save_clipboard") {
+    navigator.clipboard.readText()
+      .then(text => {
+        if (text.trim()) {
+          chrome.runtime.sendMessage({
+            type: "clipboard_text",
+            text
+          });
+        }
+      })
+      .catch(err => {
+        console.error("Clipboard read failed:", err);
+      });
   }
 });
