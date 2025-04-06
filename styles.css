@@ -6,13 +6,18 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-width: 400px; /* Ensure popup width is large enough */
 }
 
 .container {
-  width: 350px; /* Adjusted width for better viewing */
-  padding: 10px;
-  min-height: 400px; /* Ensure popup has enough space */
-  box-sizing: border-box; /* Prevents layout issues */
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 400px; /* Ensure sufficient width for content */
+  height: auto;
+  min-height: 500px; /* Ensure popup is tall enough */
+  box-sizing: border-box;
 }
 
 button {
@@ -30,8 +35,9 @@ input, select {
 
 .history-container {
   margin-top: 20px;
-  max-height: 300px; /* Limit height for the list */
-  overflow-y: auto;  /* Scrollable history */
+  max-height: 300px;
+  overflow-y: auto;
+  flex-grow: 1; /* Allow this section to expand */
 }
 
 ul {
