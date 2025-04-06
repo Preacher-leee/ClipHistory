@@ -1,131 +1,210 @@
-/* styles.css */
-
-/* General styling */
+/* Base styling for the body */
 body {
+  font-family: Arial, sans-serif;
   margin: 0;
-  padding: 0.5rem;
-  font-family: 'Segoe UI', sans-serif;
-  font-size: 14px;
-  background: #f9f9f9;
+  padding: 20px;
+  background-color: #fff;
   color: #333;
-  width: 300px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Container for the options page */
+.options-container {
+  max-width: 600px;
+  margin: 0 auto;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  font-size: 1.8em;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Styling for each setting */
+.setting {
+  margin-bottom: 20px;
+  font-size: 1.2em;
+}
+
+label {
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1.1em;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+button:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+button:focus {
+  outline: none;
+}
+
+/* Dark Mode Styling */
+body.dark-mode {
+  background-color: #333;
+  color: #fff;
+}
+
+body.dark-mode .options-container {
+  background-color: #444;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+body.dark-mode h1 {
+  color: #fff;
+}
+
+body.dark-mode .setting {
+  color: #ddd;
+}
+
+body.dark-mode button {
+  background-color: #1a73e8;
+}
+
+body.dark-mode button:hover {
+  background-color: #0b5f8f;
+  transform: translateY(-2px);
+}
+
+/* Scroll-to-top Button */
+#scrollToTop {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #007bff;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 50%;
+  font-size: 1.5em;
+  cursor: pointer;
+  display: none;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+#scrollToTop:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+#scrollToTop:focus {
+  outline: none;
+}
+
+/* Styling for clipboard history container */
+.history-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
   max-height: 400px;
   overflow-y: auto;
 }
 
-/* Header styling */
-.header {
+/* Styling for individual clipboard history item */
+.history-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
+  padding: 10px;
+  background-color: #f7f7f7;
+  border-radius: 5px;
+  transition: background-color 0.3s;
 }
 
-h1 {
-  font-size: 1.1rem;
-  margin: 0;
+.history-item:hover {
+  background-color: #f1f1f1;
 }
 
-button {
-  background: none;
+.history-item img {
+  max-width: 50px;
+  max-height: 50px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.history-item p {
+  flex-grow: 1;
+  margin-left: 10px;
+  word-wrap: break-word;
+  font-size: 1.1em;
+  color: #333;
+}
+
+.history-item button {
+  background-color: transparent;
+  color: #007bff;
   border: none;
-  font-size: 1rem;
+  font-size: 1em;
   cursor: pointer;
-  transition: transform 0.2s ease;
 }
 
-button:hover {
-  transform: scale(1.2);
+.history-item button:hover {
+  text-decoration: underline;
 }
 
-/* Search input box */
-#searchInput {
+.history-item button:focus {
+  outline: none;
+}
+
+/* Styling for search bar */
+#searchBar {
   width: 100%;
-  padding: 0.5rem;
+  padding: 10px;
+  font-size: 1.1em;
   border: 1px solid #ccc;
-  border-radius: 6px;
-  margin-bottom: 0.5rem;
-  font-size: 14px;
+  border-radius: 5px;
+  margin-bottom: 15px;
   background-color: #fff;
-  box-sizing: border-box;
 }
 
-#searchInput::placeholder {
-  color: #aaa;
+#searchBar:focus {
+  outline: none;
+  border-color: #007bff;
 }
 
-/* Clipboard history container */
-.history-container {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.entry {
-  position: relative;
-}
-
-/* Clipboard text area */
-.clip-text {
-  width: 100%;
-  min-height: 2.5rem;
-  resize: vertical;
-  padding: 0.4rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 13px;
-  background: #fff;
-  transition: border 0.2s;
+/* Pinning Icon */
+.pin-icon {
+  font-size: 1.5em;
+  color: #007bff;
   cursor: pointer;
 }
 
-.clip-text:hover {
-  border-color: #999;
+.pin-icon.pinned {
+  color: #ff6f00;
 }
 
-.clip-text.copied {
-  border-color: #4caf50;
-  background: #e8f5e9;
+/* Additional body styling for dark mode */
+body.dark-mode .history-item {
+  background-color: #555;
 }
 
-/* Empty state message */
-.empty {
-  text-align: center;
-  color: #aaa;
-  font-style: italic;
-  margin-top: 2rem;
+body.dark-mode .history-item:hover {
+  background-color: #666;
 }
 
-/* Pin button */
-.pin-btn {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-size: 16px;
-  padding: 0;
-}
-
-/* Scroll-to-top button */
-#scrollTopBtn {
-  position: fixed;
-  bottom: 10px;
-  right: 10px;
-  background: #333;
-  color: #fff;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 50%;
-  font-size: 14px;
-  cursor: pointer;
-  display: none;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  z-index: 10;
-  transition: background 0.3s;
-}
-
-#scrollTopBtn:hover {
-  background: #555;
+body.dark-mode .history-item p {
+  color: #ddd;
 }
