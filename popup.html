@@ -1,0 +1,29 @@
+<!-- popup.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clipboard History</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="header">
+    <h1>📋 Clipboard</h1>
+    <button id="clearHistory" title="Clear all">🗑️</button>
+  </div>
+
+  <!-- Search Bar -->
+  <input type="text" id="searchInput" placeholder="Search clipboard..." title="Search History" />
+
+  <!-- Clipboard History Container -->
+  <div id="history" class="history-container">
+    <!-- Clipboard history entries will be injected here dynamically -->
+  </div>
+
+  <!-- Scroll to Top Button -->
+  <button id="scrollTopBtn" title="Back to Top">⬆️</button>
+
+  <script src="popup.js"></script>
+</body>
+</html>
