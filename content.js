@@ -1,10 +1,12 @@
 // content.js
 
+// Send clipboard text (for copy or paste)
 function sendClipboardText(text, type = 'clipboard_text') {
-  if (!text.trim()) return;
+  if (!text || !text.trim()) return;
   chrome.runtime.sendMessage({ type, text });
 }
 
+// Send clipboard image as Base64 (data URL)
 async function sendClipboardImage() {
   try {
     const items = await navigator.clipboard.read();
@@ -24,20 +26,21 @@ async function sendClipboardImage() {
       }
     }
   } catch (err) {
-    // Clipboard read requires user gesture and permission
+    // navigator.clipboard.read() requires user gesture and permissions
+    // Fail silently or log if debugging
+    // console.warn('Clipboard image read failed', err);
   }
 }
 
-// Capture Ctrl+C or right-click > Copy
+// Handle text copy (Ctrl+C, right-click Copy)
 document.addEventListener('copy', () => {
-  const selected = window.getSelection()?.toString() || '';
-  sendClipboardText(selected);
-  sendClipboardImage(); // optional: may not work without user gesture
+  const selectedText = window.getSelection()?.toString() || '';
+  sendClipboardText(selectedText, 'clipboard_text');
+  sendClipboardImage(); // Attempt to capture image (if any)
 });
 
-// Capture Ctrl+V or right-click > Paste
+// Handle text paste (Ctrl+V, right-click Paste)
 document.addEventListener('paste', (e) => {
   const pastedText = (e.clipboardData || window.clipboardData)?.getData('text') || '';
   sendClipboardText(pastedText, 'clipboard_paste');
-  // Do not read clipboard image here; navigator.clipboard.read() not allowed
 });
