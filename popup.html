@@ -1,29 +1,35 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Clipboard History</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <div class="header">
-    <h1>Clipboard History</h1>
-    <label class="toggle-container">
-      <span>🌙</span>
-      <input type="checkbox" id="darkModeToggle" />
-    </label>
+  <div id="popupContainer">
+    <!-- Dark Mode Toggle -->
+    <header>
+      <label for="darkModeToggle" class="dark-mode-toggle">
+        <input type="checkbox" id="darkModeToggle">
+        Dark Mode
+      </label>
+    </header>
+
+    <!-- Clipboard History List -->
+    <section id="historyContainer">
+      <div id="clipboardHistory" class="clipboard-history-list">
+        <!-- Clipboard history items will be injected here dynamically -->
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <button id="clearHistoryBtn" class="action-btn">Clear History</button>
+      <button id="optionsBtn" class="action-btn">Options</button>
+    </footer>
   </div>
 
-  <input type="text" id="searchInput" placeholder="Search clipboard..." />
-
-  <div class="view-toggle">
-    <button id="listViewBtn">List</button>
-    <button id="gridViewBtn">Grid</button>
-  </div>
-
-  <div id="clipboardContainer" class="list-view"></div>
-
-  <button id="scrollToTop" title="Scroll to top">↑</button>
+  <script src="popup.js"></script>
 </body>
-<script src="popup.js"></script>
 </html>
