@@ -1,41 +1,44 @@
-// Listen for copy events (Ctrl+C, Command+C, right-click -> Copy)
-document.addEventListener('copy', () => {
-  getClipboardData('copy');
-});
+// Function to handle copied text or image and send it to the background script
+function handleClipboardEvent(event) {
+  // Allow only successful text or image pasting or copying
+  const clipboardData = event.clipboardData || window.clipboardData;
 
-// Listen for paste events (Ctrl+V, Command+V, right-click -> Paste)
-document.addEventListener('paste', () => {
-  getClipboardData('paste');
-});
-
-// Function to get clipboard data when copy or paste event occurs
-async function getClipboardData(action) {
-  try {
-    const clipboardItems = await navigator.clipboard.read();
-    const clipboardHistory = [];
-
-    for (let item of clipboardItems) {
-      const types = item.types;
-
-      for (let type of types) {
-        if (type.startsWith('text/')) {
-          const text = await item.getType(type);
-          clipboardHistory.push({ type: 'text', content: await text.text() });
-        } else if (type.startsWith('image/')) {
-          const blob = await item.getType(type);
-          const url = URL.createObjectURL(blob);
-          clipboardHistory.push({ type: 'image', content: url });
-        }
+  if (clipboardData) {
+    // Check for text content in the clipboard
+    if (clipboardData.types.includes('text/plain')) {
+      const textContent = clipboardData.getData('text/plain');
+      if (textContent) {
+        // Send copied text content to the background script for saving
+        chrome.runtime.sendMessage({
+          type: 'SAVE_CLIPBOARD_ITEM',
+          content: textContent,
+          contentType: 'text',
+        });
       }
     }
 
-    // Save clipboard data to chrome storage
-    chrome.storage.local.get(['clipboardHistory'], (result) => {
-      const existingHistory = result.clipboardHistory || [];
-      const newHistory = [...clipboardHistory, ...existingHistory];
-      chrome.storage.local.set({ clipboardHistory: newHistory });
-    });
-  } catch (error) {
-    console.error('Error reading clipboard data:', error);
+    // Check for image content in the clipboard
+    if (clipboardData.types.includes('image/png') || clipboardData.types.includes('image/jpeg')) {
+      const imageBlob = clipboardData.items[0].getAsFile();
+      if (imageBlob) {
+        const reader = new FileReader();
+        reader.onloadend = function () {
+          // Send copied image data as base64 to the background script for saving
+          const imageData = reader.result.split(',')[1]; // Base64 data
+          chrome.runtime.sendMessage({
+            type: 'SAVE_CLIPBOARD_ITEM',
+            content: imageData,
+            contentType: 'image',
+          });
+        };
+        reader.readAsDataURL(imageBlob);
+      }
+    }
   }
 }
+
+// Listen for copy events (keyboard and mouse)
+document.addEventListener('copy', handleClipboardEvent);
+
+// Listen for paste events (keyboard and mouse)
+document.addEventListener('paste', handleClipboardEvent);
