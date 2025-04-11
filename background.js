@@ -1,55 +1,66 @@
 let clipboardHistory = [];
 
-// Listen for messages from content.js or popup.js
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'COPY' || message.type === 'PASTE') {
-    // Handle the copied or pasted content
-    const newItem = {
-      content: message.content,
-      contentType: message.contentType, // 'text' or 'image'
-      timestamp: new Date().toISOString(),
-      action: message.type, // 'copy' or 'paste'
-      pinned: false, // Will implement pinning in the future
-    };
-
-    clipboardHistory.unshift(newItem); // Add new item to history
-    if (clipboardHistory.length > 20) clipboardHistory.pop(); // Limit history size to 20 items
-
-    // Save clipboard history to localStorage (or chrome.storage for persistence)
-    chrome.storage.local.set({ clipboardHistory: clipboardHistory });
-
-    // Notify popup.js to update the UI
-    chrome.runtime.sendMessage({ type: 'UPDATE_HISTORY', history: clipboardHistory });
-  }
-
-  // Handle requests for the current clipboard history (from popup.js)
-  if (message.type === 'GET_HISTORY') {
-    sendResponse({ history: clipboardHistory });
-  }
-
-  // Handle pinning action (future feature implementation)
-  if (message.type === 'PIN_ITEM') {
-    const { index } = message;
-    if (clipboardHistory[index]) {
-      clipboardHistory[index].pinned = !clipboardHistory[index].pinned;
-      chrome.storage.local.set({ clipboardHistory: clipboardHistory });
-      sendResponse({ history: clipboardHistory });
-    }
-  }
-
-  // Handle clearing clipboard history (future feature implementation)
-  if (message.type === 'CLEAR_HISTORY') {
-    clipboardHistory = [];
-    chrome.storage.local.set({ clipboardHistory: [] });
-    sendResponse({ history: clipboardHistory });
-  }
-});
-
-// Load clipboard history when extension starts
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.local.get('clipboardHistory', (data) => {
-    if (data.clipboardHistory) {
-      clipboardHistory = data.clipboardHistory;
+// Load clipboard history from storage on startup
+chrome.runtime.onStartup.addListener(() => {
+  chrome.storage.local.get(['clipboardHistory'], (result) => {
+    if (result.clipboardHistory) {
+      clipboardHistory = result.clipboardHistory;
     }
   });
+});
+
+// Listen for messages from content or popup scripts
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'SAVE_CLIPBOARD_ITEM') {
+    const item = {
+      id: Date.now(),
+      content: message.content,
+      contentType: message.contentType,
+      timestamp: new Date().toISOString(),
+      pinned: false,
+      category: message.category || '',
+    };
+
+    // Avoid storing empty or duplicate text
+    if (
+      item.contentType === 'text' &&
+      (!item.content || clipboardHistory.some(i => i.content === item.content))
+    ) {
+      return;
+    }
+
+    clipboardHistory.unshift(item);
+    chrome.storage.local.set({ clipboardHistory });
+  }
+
+  if (message.type === 'GET_HISTORY') {
+    sendResponse(clipboardHistory);
+  }
+
+  if (message.type === 'PIN_ITEM') {
+    clipboardHistory = clipboardHistory.map(item =>
+      item.id === message.id ? { ...item, pinned: !item.pinned } : item
+    );
+    chrome.storage.local.set({ clipboardHistory });
+  }
+
+  if (message.type === 'DELETE_ITEM') {
+    clipboardHistory = clipboardHistory.filter(item => item.id !== message.id);
+    chrome.storage.local.set({ clipboardHistory });
+  }
+
+  if (message.type === 'CLEAR_HISTORY') {
+    clipboardHistory = [];
+    chrome.storage.local.set({ clipboardHistory });
+  }
+
+  if (message.type === 'EXPORT_HISTORY') {
+    sendResponse(clipboardHistory);
+  }
+
+  if (message.type === 'IMPORT_HISTORY') {
+    const imported = message.data || [];
+    clipboardHistory = imported.concat(clipboardHistory);
+    chrome.storage.local.set({ clipboardHistory });
+  }
 });
