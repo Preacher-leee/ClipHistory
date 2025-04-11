@@ -1,34 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Clipboard Extension Options</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clipboard History Options</title>
+  <link rel="stylesheet" href="options.css">
 </head>
 <body>
-  <div class="header">
-    <h1>Settings</h1>
-    <label class="toggle-container">
-      <span>🌙</span>
-      <input type="checkbox" id="darkModeToggle">
-    </label>
-  </div>
+  <h1>Clipboard History Options</h1>
 
-  <section>
-    <h2>Display Mode</h2>
-    <div class="view-toggle">
-      <button id="listViewBtn">List View</button>
-      <button id="gridViewBtn">Grid View</button>
-    </div>
+  <!-- Dark Mode Toggle -->
+  <section class="setting">
+    <label for="darkModeToggle">Enable Dark Mode:</label>
+    <input type="checkbox" id="darkModeToggle">
   </section>
 
-  <section>
-    <h2>Preview</h2>
-    <div id="previewContainer" class="clipboard-preview list-view">
-      <div class="clipboard-item">Sample Text 1</div>
-      <div class="clipboard-item">Sample Text 2</div>
-      <div class="clipboard-item"><img src="https://via.placeholder.com/150" alt="Image" /></div>
-    </div>
+  <!-- View Style Selection (List/Grid) -->
+  <section class="setting">
+    <label for="viewStyleSelect">Choose View Style:</label>
+    <select id="viewStyleSelect">
+      <option value="list">List View</option>
+      <option value="grid">Grid View</option>
+    </select>
+  </section>
+
+  <!-- Export Clipboard History -->
+  <section class="setting">
+    <button id="exportBtn">Export Clipboard History</button>
+    <p>Export your clipboard history as a JSON file.</p>
+  </section>
+
+  <!-- Import Clipboard History -->
+  <section class="setting">
+    <button id="importBtn">Import Clipboard History</button>
+    <p>Import clipboard history from a JSON file.</p>
   </section>
 
   <script src="options.js"></script>
