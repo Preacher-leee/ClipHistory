@@ -1,20 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
   <title>Clipboard History</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div id="popupContainer">
-    <button id="clearHistory">Clear History</button>
-    <input type="text" id="searchInput" placeholder="Search history...">
-    <button id="darkModeToggle">Toggle Dark Mode</button>
-    
-    <div id="historyContainer"></div>
+  <div class="header">
+    <h1>Clipboard History</h1>
+    <label class="toggle-container">
+      <span>🌙</span>
+      <input type="checkbox" id="darkModeToggle" />
+    </label>
   </div>
-  
-  <script src="popup.js"></script>
+
+  <input type="text" id="searchInput" placeholder="Search clipboard..." />
+
+  <div class="view-toggle">
+    <button id="listViewBtn">List</button>
+    <button id="gridViewBtn">Grid</button>
+  </div>
+
+  <div id="clipboardContainer" class="list-view"></div>
+
+  <button id="scrollToTop" title="Scroll to top">↑</button>
 </body>
+<script src="popup.js"></script>
 </html>
