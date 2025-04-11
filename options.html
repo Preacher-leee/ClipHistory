@@ -1,32 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clipboard History - Settings</title>
-  <link rel="stylesheet" href="options.css">
+  <meta charset="UTF-8" />
+  <title>Clipboard Extension Options</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="container">
-    <h1>Clipboard History - Settings</h1>
-
-    <!-- Dark Mode Toggle -->
-    <div class="option">
-      <label for="darkModeToggle">Dark Mode</label>
+  <div class="header">
+    <h1>Settings</h1>
+    <label class="toggle-container">
+      <span>🌙</span>
       <input type="checkbox" id="darkModeToggle">
-    </div>
-
-    <!-- List View / Grid View Toggle -->
-    <div class="option">
-      <label for="viewMode">Display Mode</label>
-      <select id="viewMode">
-        <option value="list">List View</option>
-        <option value="grid">Grid View</option>
-      </select>
-    </div>
-
-    <button id="saveSettings">Save Settings</button>
+    </label>
   </div>
+
+  <section>
+    <h2>Display Mode</h2>
+    <div class="view-toggle">
+      <button id="listViewBtn">List View</button>
+      <button id="gridViewBtn">Grid View</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Preview</h2>
+    <div id="previewContainer" class="clipboard-preview list-view">
+      <div class="clipboard-item">Sample Text 1</div>
+      <div class="clipboard-item">Sample Text 2</div>
+      <div class="clipboard-item"><img src="https://via.placeholder.com/150" alt="Image" /></div>
+    </div>
+  </section>
 
   <script src="options.js"></script>
 </body>
