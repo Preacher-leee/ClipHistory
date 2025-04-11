@@ -1,75 +1,72 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const container = document.getElementById("clipboardContainer");
-  const darkToggle = document.getElementById("darkModeToggle");
-  const searchInput = document.getElementById("searchInput");
-  const scrollToTopBtn = document.getElementById("scrollToTop");
-  const listViewBtn = document.getElementById("listViewBtn");
-  const gridViewBtn = document.getElementById("gridViewBtn");
+document.addEventListener('DOMContentLoaded', function () {
+  // Elements
+  const darkModeToggle = document.getElementById('darkModeToggle');
+  const clipboardHistoryContainer = document.getElementById('clipboardHistory');
+  const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+  const optionsBtn = document.getElementById('optionsBtn');
 
-  // Load clipboard history and dark mode preference
-  chrome.storage.local.get(["clipboardHistory", "darkMode", "viewMode"], (result) => {
-    const history = result.clipboardHistory || [];
-    const isDark = result.darkMode ?? window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const view = result.viewMode || "list";
+  // Load and display clipboard history
+  loadClipboardHistory();
 
-    document.body.classList.toggle("dark-mode", isDark);
-    darkToggle.checked = isDark;
-    container.className = view + "-view";
-    renderClipboard(history);
+  // Load dark mode preference
+  chrome.storage.local.get('darkMode', (result) => {
+    if (result.darkMode) {
+      document.body.classList.add('dark-mode');
+      darkModeToggle.checked = true;
+    } else {
+      document.body.classList.remove('dark-mode');
+      darkModeToggle.checked = false;
+    }
   });
 
-  // Dark mode toggle
-  darkToggle.addEventListener("change", () => {
-    const isEnabled = darkToggle.checked;
-    chrome.storage.local.set({ darkMode: isEnabled });
-    document.body.classList.toggle("dark-mode", isEnabled);
+  // Event listener for dark mode toggle
+  darkModeToggle.addEventListener('change', function () {
+    const isDarkMode = darkModeToggle.checked;
+    chrome.storage.local.set({ darkMode: isDarkMode });
+    document.body.classList.toggle('dark-mode', isDarkMode);
   });
 
-  // View toggle
-  listViewBtn.addEventListener("click", () => {
-    container.className = "list-view";
-    chrome.storage.local.set({ viewMode: "list" });
-  });
-
-  gridViewBtn.addEventListener("click", () => {
-    container.className = "grid-view";
-    chrome.storage.local.set({ viewMode: "grid" });
-  });
-
-  // Scroll to top button
-  scrollToTopBtn.addEventListener("click", () => {
-    container.scrollTo({ top: 0, behavior: "smooth" });
-  });
-
-  // Search filtering
-  searchInput.addEventListener("input", (e) => {
-    const keyword = e.target.value.toLowerCase();
-    chrome.storage.local.get("clipboardHistory", (data) => {
-      const filtered = (data.clipboardHistory || []).filter(entry =>
-        entry.type === "text"
-          ? entry.content.toLowerCase().includes(keyword)
-          : entry.type === "image"
-          ? entry.content.toLowerCase().includes(keyword)
-          : false
-      );
-      renderClipboard(filtered);
+  // Event listener for clear history button
+  clearHistoryBtn.addEventListener('click', function () {
+    chrome.storage.local.set({ clipboardHistory: [] }, function () {
+      loadClipboardHistory();
     });
   });
 
-  function renderClipboard(history) {
-    container.innerHTML = "";
-    history.slice().reverse().forEach((entry, i) => {
-      const div = document.createElement("div");
-      div.className = "clipboard-item";
-      if (entry.type === "text") {
-        div.textContent = entry.content;
-      } else if (entry.type === "image") {
-        const img = document.createElement("img");
-        img.src = entry.content;
-        img.alt = "Copied Image";
-        div.appendChild(img);
+  // Event listener for options button
+  optionsBtn.addEventListener('click', function () {
+    chrome.runtime.openOptionsPage();
+  });
+
+  // Load clipboard history from local storage and display it
+  function loadClipboardHistory() {
+    chrome.storage.local.get('clipboardHistory', function (result) {
+      const history = result.clipboardHistory || [];
+      clipboardHistoryContainer.innerHTML = ''; // Clear the container
+
+      if (history.length === 0) {
+        clipboardHistoryContainer.innerHTML = '<p>No clipboard history available.</p>';
+        return;
       }
-      container.appendChild(div);
+
+      history.forEach(item => {
+        const historyItem = document.createElement('div');
+        historyItem.classList.add('clipboard-history-item');
+
+        // Display text or image
+        if (item.type === 'text') {
+          historyItem.innerHTML = `<p>${item.content}</p>`;
+        } else if (item.type === 'image') {
+          const img = document.createElement('img');
+          img.src = item.content;
+          img.alt = 'Copied Image';
+          img.classList.add('clipboard-history-image');
+          historyItem.appendChild(img);
+        }
+
+        // Append the item to the history container
+        clipboardHistoryContainer.appendChild(historyItem);
+      });
     });
   }
 });
